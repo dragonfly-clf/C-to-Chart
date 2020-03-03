@@ -13,3 +13,21 @@
 	7.关键字和内置函数
 	8.对于自己手写的函数，可以采用单独使用一张图表表示的方法，在使用的地方引用，因此不需要单独考虑，
 	  只需要每一个函数单独建立一个流程图即可（包括主函数）。
+3.3
+    现在已经完成了不带参数的宏的展开和注释的消除
+	graphviz
+	from graphviz import Digraph
+	点
+	    dot.node('名', '标签')
+		dot.node(name='', label='', color='边框颜色')
+		grap_g.node("start", label="start",shape="Mdiamond")
+		Mdiamond菱形判断
+		rectangle矩形大部分
+		Mrecord圆角开始结束
+		parallelogram平行四边形输入输出
+		各种形状https://img-blog.csdn.net/2018031722122912?watermark/2/text/Ly9ibG9nLmNzZG4ubmV0L2p1bnJ1aXRpYW4=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70
+	线
+        dot.edges(['AB',''])
+        dot.edge('A','B', '线上的字')
+    展示
+        dot.view()	
