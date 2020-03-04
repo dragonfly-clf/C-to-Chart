@@ -21,9 +21,9 @@
 	    dot.node('名', '标签')
 		dot.node(name='', label='', color='边框颜色')
 		grap_g.node("start", label="start",shape="Mdiamond")
-		Mdiamond菱形判断
+		diamond菱形判断
 		rectangle矩形大部分
-		Mrecord圆角开始结束
+		record圆角开始结束
 		parallelogram平行四边形输入输出
 		各种形状https://img-blog.csdn.net/2018031722122912?watermark/2/text/Ly9ibG9nLmNzZG4ubmV0L2p1bnJ1aXRpYW4=/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70
 	线
