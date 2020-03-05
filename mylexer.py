@@ -2,7 +2,7 @@ import re
 from graphviz import Digraph
 
 dot = Digraph(comment="The Chart")
-Shape = ['record', 'rectangle', 'diamond', 'parallelogram']#开始，正常，判断，输入输出
+Shape = ['Mrecord', 'rectangle', 'diamond', 'parallelogram']#开始，正常，判断，输入输出
 NodeName = [str(x) for x in range(1, 100)]
 Key = ['int', 'char', 'long long', 'long', 'void', 'unsigned int', 'unsigned long long', 'unsigned long', 'float', 'double', 'long double']
 
