@@ -36,4 +36,10 @@
 3.4
     2H
     回顾了正则表达式，用正则表达式判断函数，并成功构建了Start和End模块并连接，今天满课，主要时间处理作业，明天课程容量小，继续完成while，for和if的部分。
-	
+3.5
+    Afernoon 3H
+	完成了for和return的部分，有这么几个容易报错的点：
+	1.图片view一次之后要关掉。
+	2.ParaNode，NodeNum，Floor等更新完了别忘了加减
+	3.分清楚是几维的list，以及判断空。
+	4.NodeForFloor是返回的位置，NodeForNext【Floor】是每一层的通向结尾的

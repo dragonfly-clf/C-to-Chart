@@ -120,10 +120,32 @@ def BuildChart(List):
             continue
 
         if String.find('}') != -1:
+            if ParaNode != '':#建立中间正常块
+                CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
+                cnt = 0
+                for NextNode in NodeToNext[Floor]:
+                    CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt])
+                    cnt += 1
+                while NodeToNext[Floor]:
+                    NodeToNextMark[Floor].pop()
+                    NodeToNext[Floor].pop()
+                NodeToNext[Floor].append(NodeName[NodeNum])
+                NodeToNextMark[Floor].append('')
+                NodeNum += 1
+                ParaNode = ''
+
+            if NodeForFloor:#结束指向之前的块
+                cnt = 0
+                for NextNode in NodeToNext[Floor]:
+                    CreateEdge(NextNode, NodeForFloor[-1], NodeToNextMark[Floor][cnt])
+                    cnt += 1
+                while NodeToNext[Floor]:
+                    NodeToNextMark[Floor].pop()
+                    NodeToNext[Floor].pop()
+                NodeForFloor.pop()
+
             Floor -= 1
             Return = 0
-            if NodeForFloor:
-                NodeForFloor.pop()
             if Floor == 0:#函数结束
                 CreateNode(NodeName[NodeNum], 'End', Shape[0])
                 cnt = 0
@@ -153,11 +175,12 @@ def BuildChart(List):
                     CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt])
                     cnt += 1
                 while NodeToNext[Floor]:
-                    NodeToNextMark[Floor].pop();
-                    NodeToNext[Floor].pop();
+                    NodeToNextMark[Floor].pop()
+                    NodeToNext[Floor].pop()
                 NodeToNext[Floor].append(NodeName[NodeNum])
                 NodeToNextMark[Floor].append('')
                 NodeNum += 1
+                ParaNode = ''
 
             #创建类似于输出的返回Node
             CreateNode(NodeName[NodeNum], 'Return ' + String, Shape[3])
@@ -166,8 +189,8 @@ def BuildChart(List):
                 CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt])
                 cnt += 1
             while NodeToNext[Floor]:
-                NodeToNextMark[Floor].pop();
-                NodeToNext[Floor].pop();
+                NodeToNextMark[Floor].pop()
+                NodeToNext[Floor].pop()
             NodeToEnd.append(NodeName[NodeNum])
             NodeNum += 1
             continue
@@ -181,8 +204,8 @@ def BuildChart(List):
                     CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt])
                     cnt += 1
                 while NodeToNext[Floor]:
-                    NodeToNextMark[Floor].pop();
-                    NodeToNext[Floor].pop();
+                    NodeToNextMark[Floor].pop()
+                    NodeToNext[Floor].pop()
                 NodeToNext[Floor].append(NodeName[NodeNum])
                 NodeToNextMark[Floor].append('')
                 NodeNum += 1
@@ -194,13 +217,15 @@ def BuildChart(List):
                 CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt])
                 cnt += 1
             while NodeToNext[Floor]:
-                NodeToNextMark[Floor].pop();
-                NodeToNext[Floor].pop();
+                NodeToNextMark[Floor].pop()
+                NodeToNext[Floor].pop()
             #yes and no 分支建立
             NodeToNext[Floor+1].append(NodeName[NodeNum])
             NodeToNextMark[Floor+1].append('Yes')
             NodeToNext[Floor].append(NodeName[NodeNum])
             NodeToNextMark[Floor].append('No')
+            #层栈存入
+            NodeForFloor.append(NodeName[NodeNum])
 
             NodeNum += 1
             Floor += 1
@@ -209,9 +234,7 @@ def BuildChart(List):
         ParaNode = ParaNode + String
 
 
-    return
-
-if __name__=='__main__':#默认所有的分层都有{}，所有}都是单独一行
+if __name__ == '__main__':#默认所有的分层都有{}，所有}都是单独一行
     Result = []
     filename = input("Please input the path:")
     Filename = open(filename)
