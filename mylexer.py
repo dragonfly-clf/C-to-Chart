@@ -88,12 +88,20 @@ def DeleteNote(List):
 
 def BuildChart(List):
     NodeNum = 0#每次新建Node要+1
-    Floor = 0#每次进入不同层要加减
-    NodeForFloor = []#每一层最后一个，关键性连接语句算作上一层，比如函数Start算作0层
-    NodeToNext = []#每次要清除
-    NodeToNextMark = []#跟着NodeToNext一起变
+    Floor = -1#每次进入不同层要加减
+    ParaNode = ''
+    Return = 0#当为1时表明读到了return，当前函数后面都无效
+    NodeForFloor = []#每一层最后一个，关键性连接语句算作上一层,循环的判断存在这里，用于结束循环，continue回来,类似一个栈，栈顶是当前循环的开端
+    NodeToEnd = []#return
+    NodeToNext = [[] for i in range(100)]#想要指向Floor层下一个的所有，每次要清除
+    NodeToNextMark = [[] for i in range(100)]#跟着NodeToNext一起变
     for String in List:
         IsFunc = 0
+        if String.find(r'#include') != -1:
+            continue
+
+        if Return and String.find('}') == -1:#return 语句之后的当前层的后续都没有用
+            continue
 
         for key in Key:
             x = key + r'\s+' + r'[a-zA-Z\_][0-9a-zA-Z\_]*' + r'[(.)]'
@@ -103,35 +111,107 @@ def BuildChart(List):
         if IsFunc == 1:#是函数，创造一个新的node
             for key in Key:
                 String = String.replace(key, '')
+            Floor += 1
             String = 'Start ' + String.replace(' ', '').replace('{', '')
             CreateNode(NodeName[NodeNum], String, Shape[0])
-            NodeForFloor.append(NodeName[NodeNum])
-            NodeToNext.append(NodeName[NodeNum])
-            NodeToNextMark.append('')
+            NodeToNext[Floor].append(NodeName[NodeNum])
+            NodeToNextMark[Floor].append('')
             NodeNum += 1
-            Floor += 1
             continue
 
         if String.find('}') != -1:
             Floor -= 1
-            NodeForFloor.pop()
+            Return = 0
+            if NodeForFloor:
+                NodeForFloor.pop()
             if Floor == 0:#函数结束
                 CreateNode(NodeName[NodeNum], 'End', Shape[0])
                 cnt = 0
-                for NextNode in NodeToNext:
-                    CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[cnt])
+                for NextNode in NodeToNext[Floor]:
+                    CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt])
                     cnt += 1
-                while NodeToNext:
-                    NodeToNext.pop()
-                    NodeToNextMark.pop()
+                while NodeToNext[Floor]:
+                    NodeToNext[Floor].pop()
+                    NodeToNextMark[Floor].pop()
+
+                for Node in NodeToEnd:
+                    CreateEdge(Node, NodeName[NodeNum], '')
+                while NodeToEnd:
+                    NodeToEnd.pop()
+
                 NodeNum += 1
                 continue
 
+        if re.match(r'\s*return[\s;]+', String):#寻找return
+            Return = 1
+            String = String.replace('return', '').replace(';', '').replace(' ', '')
+
+            if ParaNode != '':#把之前的连续普通先连上
+                CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
+                cnt = 0
+                for NextNode in NodeToNext[Floor]:
+                    CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt])
+                    cnt += 1
+                while NodeToNext[Floor]:
+                    NodeToNextMark[Floor].pop();
+                    NodeToNext[Floor].pop();
+                NodeToNext[Floor].append(NodeName[NodeNum])
+                NodeToNextMark[Floor].append('')
+                NodeNum += 1
+
+            #创建类似于输出的返回Node
+            CreateNode(NodeName[NodeNum], 'Return ' + String, Shape[3])
+            cnt = 0
+            for NextNode in NodeToNext[Floor]:
+                CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt])
+                cnt += 1
+            while NodeToNext[Floor]:
+                NodeToNextMark[Floor].pop();
+                NodeToNext[Floor].pop();
+            NodeToEnd.append(NodeName[NodeNum])
+            NodeNum += 1
+            continue
+
+        if re.match(r'\s*for()', String):#for循环
+
+            if ParaNode != '':#把之前的连续普通先连上
+                CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
+                cnt = 0
+                for NextNode in NodeToNext[Floor]:
+                    CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt])
+                    cnt += 1
+                while NodeToNext[Floor]:
+                    NodeToNextMark[Floor].pop();
+                    NodeToNext[Floor].pop();
+                NodeToNext[Floor].append(NodeName[NodeNum])
+                NodeToNextMark[Floor].append('')
+                NodeNum += 1
+
+            String = String.replace('for', '').replace(' ', '').replace('(', '').replace(')', '')
+            CreateNode(NodeName[NodeNum], String, Shape[2])
+            cnt = 0
+            for NextNode in NodeToNext[Floor]:
+                CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt])
+                cnt += 1
+            while NodeToNext[Floor]:
+                NodeToNextMark[Floor].pop();
+                NodeToNext[Floor].pop();
+            #yes and no 分支建立
+            NodeToNext[Floor+1].append(NodeName[NodeNum])
+            NodeToNextMark[Floor+1].append('Yes')
+            NodeToNext[Floor].append(NodeName[NodeNum])
+            NodeToNextMark[Floor].append('No')
+
+            NodeNum += 1
+            Floor += 1
+            continue
+
+        ParaNode = ParaNode + String
 
 
     return
 
-if __name__=='__main__':
+if __name__=='__main__':#默认所有的分层都有{}，所有}都是单独一行
     Result = []
     filename = input("Please input the path:")
     Filename = open(filename)
