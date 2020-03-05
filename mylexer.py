@@ -11,7 +11,11 @@ def CreateNode(Name, Label, Shape):
     return
 
 def CreateEdge(From, To, Label):
-    dot.edge(From, To, Label)
+    Head = ''
+    Tail = ''
+    if Label == 'No':
+        Tail = 'e'
+    dot.edge(From, To, label=Label, tailport=Tail)
     return
 
 def Hong(List):#Define

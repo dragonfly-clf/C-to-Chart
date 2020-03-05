@@ -43,3 +43,6 @@
 	2.ParaNode，NodeNum，Floor等更新完了别忘了加减
 	3.分清楚是几维的list，以及判断空。
 	4.NodeForFloor是返回的位置，NodeForNext【Floor】是每一层的通向结尾的
+	
+	graphviz可以调整线条出入位置
+	tailport,headport='n、ne、e、se、s、sw、w、nw'
