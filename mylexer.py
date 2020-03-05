@@ -10,12 +10,8 @@ def CreateNode(Name, Label, Shape):
     dot.node(name=Name, label=Label, shape=Shape)
     return
 
-def CreateEdge(From, To, Label):
-    Head = ''
-    Tail = ''
-    if Label == 'No':
-        Tail = 'e'
-    dot.edge(From, To, label=Label, tailport=Tail)
+def CreateEdge(From, To, Label, Head, Tail):
+    dot.edge(From, To, label=Label, tailport=Tail, headport=Head)
     return
 
 def Hong(List):#Define
@@ -47,6 +43,10 @@ def Hong(List):#Define
 
     return Anslist
 
+def CLean(Para, For):
+    Para += For
+    Para = Para.replace('{', '').replace(' ', '')
+    return Para
 
 def DeleteNote(List):
     Left = 0#1->一个/, 2->双边注释前半边， 3->双边注释后半边*
@@ -94,6 +94,7 @@ def BuildChart(List):
     NodeNum = 0#每次新建Node要+1
     Floor = -1#每次进入不同层要加减
     ParaNode = ''
+    EndOfFor = ''
     Return = 0#当为1时表明读到了return，当前函数后面都无效
     NodeForFloor = []#每一层最后一个，关键性连接语句算作上一层,循环的判断存在这里，用于结束循环，continue回来,类似一个栈，栈顶是当前循环的开端
     NodeToEnd = []#return
@@ -124,11 +125,12 @@ def BuildChart(List):
             continue
 
         if String.find('}') != -1:
+            ParaNode = CLean(ParaNode, EndOfFor)
             if ParaNode != '':#建立中间正常块
                 CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
                 cnt = 0
                 for NextNode in NodeToNext[Floor]:
-                    CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt])
+                    CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt], 'n', '')
                     cnt += 1
                 while NodeToNext[Floor]:
                     NodeToNextMark[Floor].pop()
@@ -137,11 +139,12 @@ def BuildChart(List):
                 NodeToNextMark[Floor].append('')
                 NodeNum += 1
                 ParaNode = ''
+                EndOfFor = ''
 
             if NodeForFloor:#结束指向之前的块
                 cnt = 0
                 for NextNode in NodeToNext[Floor]:
-                    CreateEdge(NextNode, NodeForFloor[-1], NodeToNextMark[Floor][cnt])
+                    CreateEdge(NextNode, NodeForFloor[-1], NodeToNextMark[Floor][cnt], 'w', '')
                     cnt += 1
                 while NodeToNext[Floor]:
                     NodeToNextMark[Floor].pop()
@@ -150,33 +153,34 @@ def BuildChart(List):
 
             Floor -= 1
             Return = 0
+
             if Floor == 0:#函数结束
                 CreateNode(NodeName[NodeNum], 'End', Shape[0])
                 cnt = 0
                 for NextNode in NodeToNext[Floor]:
-                    CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt])
+                    CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt], 'n', '')
                     cnt += 1
                 while NodeToNext[Floor]:
                     NodeToNext[Floor].pop()
                     NodeToNextMark[Floor].pop()
 
                 for Node in NodeToEnd:
-                    CreateEdge(Node, NodeName[NodeNum], '')
+                    CreateEdge(Node, NodeName[NodeNum], '', 'n', '')
                 while NodeToEnd:
                     NodeToEnd.pop()
 
                 NodeNum += 1
                 continue
-
+        
         if re.match(r'\s*return[\s;]+', String):#寻找return
             Return = 1
             String = String.replace('return', '').replace(';', '').replace(' ', '')
-
+            ParaNode = CLean(ParaNode, EndOfFor)
             if ParaNode != '':#把之前的连续普通先连上
                 CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
                 cnt = 0
                 for NextNode in NodeToNext[Floor]:
-                    CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt])
+                    CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt], 'n', '')
                     cnt += 1
                 while NodeToNext[Floor]:
                     NodeToNextMark[Floor].pop()
@@ -185,12 +189,13 @@ def BuildChart(List):
                 NodeToNextMark[Floor].append('')
                 NodeNum += 1
                 ParaNode = ''
+                EndOfFor = ''
 
             #创建类似于输出的返回Node
             CreateNode(NodeName[NodeNum], 'Return ' + String, Shape[3])
             cnt = 0
             for NextNode in NodeToNext[Floor]:
-                CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt])
+                CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt], 'n', '')
                 cnt += 1
             while NodeToNext[Floor]:
                 NodeToNextMark[Floor].pop()
@@ -200,12 +205,20 @@ def BuildChart(List):
             continue
 
         if re.match(r'\s*for()', String):#for循环
+            String = String.replace('for', '').replace(' ', '').replace('(', '').replace(')', '')
+            x = String.find(';')
+            ParaNode += String[0:x+1]
+            String = String[x+1:]
+            x = String.find(';')
+            EndOfFor = String[x+1:]
+            String = String[0:x]
 
+            ParaNode = CLean(ParaNode, '')
             if ParaNode != '':#把之前的连续普通先连上
                 CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
                 cnt = 0
                 for NextNode in NodeToNext[Floor]:
-                    CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt])
+                    CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt], 'n', '')
                     cnt += 1
                 while NodeToNext[Floor]:
                     NodeToNextMark[Floor].pop()
@@ -213,12 +226,13 @@ def BuildChart(List):
                 NodeToNext[Floor].append(NodeName[NodeNum])
                 NodeToNextMark[Floor].append('')
                 NodeNum += 1
+                ParaNode = ''
 
-            String = String.replace('for', '').replace(' ', '').replace('(', '').replace(')', '')
+
             CreateNode(NodeName[NodeNum], String, Shape[2])
             cnt = 0
             for NextNode in NodeToNext[Floor]:
-                CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt])
+                CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt], 'n', '')
                 cnt += 1
             while NodeToNext[Floor]:
                 NodeToNextMark[Floor].pop()
