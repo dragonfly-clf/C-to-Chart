@@ -45,7 +45,7 @@ def Hong(List):#Define
 
 def CLean(Para, For):
     Para += For
-    Para = Para.replace('{', '').replace(' ', '')
+    Para = Para.replace('{', '').replace(' ', '').strip(';')
     return Para
 
 def DeleteNote(List):
@@ -92,13 +92,13 @@ def DeleteNote(List):
 
 def BuildChart(List):
     NodeNum = 0#每次新建Node要+1
-    Floor = -1#每次进入不同层要加减
+    Floor = 0#每次进入不同层要加减
     ParaNode = ''
     EndOfFor = ''
     Return = 0#当为1时表明读到了return，当前函数后面都无效
     NodeForFloor = []#每一层最后一个，关键性连接语句算作上一层,循环的判断存在这里，用于结束循环，continue回来,类似一个栈，栈顶是当前循环的开端
     NodeToEnd = []#return
-    NodeToNext = [[] for i in range(100)]#想要指向Floor层下一个的所有，每次要清除
+    NodeToNext = [[] for i in range(100)]#所有的想要指向Floor层下一个的，意思是被指向的在Floor层，每次要清除
     NodeToNextMark = [[] for i in range(100)]#跟着NodeToNext一起变
     for String in List:
         IsFunc = 0
@@ -113,6 +113,7 @@ def BuildChart(List):
             if re.match(x, String):#判断是不是函数
                 IsFunc = 1
                 break
+
         if IsFunc == 1:#是函数，创造一个新的node
             for key in Key:
                 String = String.replace(key, '')
@@ -151,10 +152,9 @@ def BuildChart(List):
                     NodeToNext[Floor].pop()
                 NodeForFloor.pop()
 
-            Floor -= 1
             Return = 0
 
-            if Floor == 0:#函数结束
+            if Floor == 1:#函数结束
                 CreateNode(NodeName[NodeNum], 'End', Shape[0])
                 cnt = 0
                 for NextNode in NodeToNext[Floor]:
@@ -170,8 +170,29 @@ def BuildChart(List):
                     NodeToEnd.pop()
 
                 NodeNum += 1
-                continue
-        
+            Floor -= 1
+            continue
+
+        if re.match(r'\s*break\s*', String):#Break
+            Return = 1
+            ParaNode = CLean(ParaNode, EndOfFor)
+            if ParaNode != '':  # 把之前的连续普通先连上
+                CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
+                cnt = 0
+                for NextNode in NodeToNext[Floor]:
+                    CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt], 'n', '')
+                    cnt += 1
+                while NodeToNext[Floor]:
+                    NodeToNextMark[Floor].pop()
+                    NodeToNext[Floor].pop()
+                NodeToNext[Floor-1].append(NodeName[NodeNum])
+                NodeToNextMark[Floor-1].append('')
+                NodeNum += 1
+                ParaNode = ''
+                EndOfFor = ''
+
+            continue
+
         if re.match(r'\s*return[\s;]+', String):#寻找return
             Return = 1
             String = String.replace('return', '').replace(';', '').replace(' ', '')

@@ -46,3 +46,8 @@
 	
 	graphviz可以调整线条出入位置
 	tailport,headport='n、ne、e、se、s、sw、w、nw'
+	
+	Night 3H
+	写程序最烦的，就是一开始思路不是非常严谨，中间加加减减，最后思路是弥补了，但是前面的又跟不上了。
+	晚上主要完成了Break；修改了最一开始判断函数结束退出的内容；同时让框图更加美观了：for的判断及for内部的安置。
+	明天完成while，if，continue。while和for类似，if差别最大，continue还好。
