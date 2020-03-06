@@ -98,6 +98,7 @@ def BuildChart(List):
     NodeNum = 0#每次新建Node要+1
     Floor = 0#每次进入不同层要加减
     ParaNode = ''
+    FloorOfIf = [[] for i in range(100)]#Floor层If块
     EndOfFor = ['' for i in range(100)]#当前层的for变量改变的信息
     Return = 0#当为1时表明读到了return，当前函数后面都无效
     NodeForFloor = []#每一层最后一个，关键性连接语句算作上一层,循环的判断存在这里，用于结束循环，continue回来,类似一个栈，栈顶是当前循环的开端
@@ -112,9 +113,9 @@ def BuildChart(List):
         if Return and String.find('}') == -1:#return 语句之后的当前层的后续都没有用
             continue
 
-        for key in Key:
+        for key in Key:#判断是不是函数
             x = key + r'\s+' + r'[a-zA-Z\_][0-9a-zA-Z\_]*' + r'[(.)]'
-            if re.match(x, String):#判断是不是函数
+            if re.match(x, String):
                 IsFunc = 1
                 break
 
@@ -129,7 +130,29 @@ def BuildChart(List):
             NodeNum += 1
             continue
 
-        if String.find('}') != -1:
+        if String.find('}') != -1:#}为分界
+
+            if FloorOfIf[Floor]:#if的结束
+                ParaNode = CLean(ParaNode, '')
+                if ParaNode != '':  # 建立中间正常块
+                    CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
+                    cnt = 0
+                    for NextNode in NodeToNext[Floor]:
+                        CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt], 'n', '')
+                        cnt += 1
+                    while NodeToNext[Floor]:
+                        NodeToNextMark[Floor].pop()
+                        NodeToNext[Floor].pop()
+                    NodeToNext[Floor].append(NodeName[NodeNum])
+                    NodeToNextMark[Floor].append('')
+                    NodeNum += 1
+                    ParaNode = ''
+
+                NodeToNext[Floor].append(FloorOfIf[Floor][-1])
+                NodeToNextMark[Floor].append('No')
+                FloorOfIf[Floor].pop()
+                continue
+
             ParaNode = CLean(ParaNode, EndOfFor[Floor])
             if ParaNode != '':#建立中间正常块
                 CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
@@ -174,6 +197,7 @@ def BuildChart(List):
                     NodeToEnd.pop()
 
                 NodeNum += 1
+
             Floor -= 1
             continue
 
@@ -327,6 +351,39 @@ def BuildChart(List):
 
             NodeNum += 1
             Floor += 1
+            continue
+
+        if re.match(r'\s*if()', String):#if,Floor不增加
+            String = String.replace('if', '').replace(' ', '').replace('(', '').replace(')', '') + '?'
+            ParaNode = CLean(ParaNode, '')
+            if ParaNode != '':  # 把之前的连续普通先连上
+                CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
+                cnt = 0
+                for NextNode in NodeToNext[Floor]:
+                    CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt], 'n', '')
+                    cnt += 1
+                while NodeToNext[Floor]:
+                    NodeToNextMark[Floor].pop()
+                    NodeToNext[Floor].pop()
+                NodeToNext[Floor].append(NodeName[NodeNum])
+                NodeToNextMark[Floor].append('')
+                NodeNum += 1
+                ParaNode = ''
+
+            CreateNode(NodeName[NodeNum], String, Shape[2])
+            cnt = 0
+            for NextNode in NodeToNext[Floor]:
+                CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt], 'n', '')
+                cnt += 1
+            while NodeToNext[Floor]:
+                NodeToNextMark[Floor].pop()
+                NodeToNext[Floor].pop()
+            # yes and no 分支建立
+            NodeToNext[Floor].append(NodeName[NodeNum])
+            NodeToNextMark[Floor].append('Yes')
+
+            FloorOfIf[Floor].append(NodeName[NodeNum])
+            NodeNum += 1
             continue
 
         ParaNode = ParaNode + String
