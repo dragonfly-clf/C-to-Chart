@@ -1,10 +1,10 @@
 #include<stdio.h>
-/*void f(int a,int b)
+double f(int a,int b)
 {
 	s=a+b;
-	return ;
+	return s;
 }
-double Z()
+/*void Z()
 {
 	a=b;
 }*/
