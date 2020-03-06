@@ -10,14 +10,14 @@ double Z()
 }
 int main()
 {
-	for (i=1;i<=n;i++)
+	int i=1254;
+	for (i=1;i<=n;i++) 
 	{
-		for (j=1;j<=n;j++)
+		while(i<=n)
 		{ 
 		    a=b+c;
 		    c=b+d;
-		    break;
-		    a????
+		    i++;
 		}
 		b++;
 		f(x,y);

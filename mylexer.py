@@ -11,6 +11,10 @@ def CreateNode(Name, Label, Shape):
     return
 
 def CreateEdge(From, To, Label, Head, Tail):
+    if Label == 'Yes':
+        Tail = 's'
+    if Label == 'No':
+        Tail = 'e'
     dot.edge(From, To, label=Label, tailport=Tail, headport=Head)
     return
 
@@ -45,7 +49,7 @@ def Hong(List):#Define
 
 def CLean(Para, For):
     Para += For
-    Para = Para.replace('{', '').replace(' ', '').strip(';')
+    Para = Para.replace('{', '').strip(' ').strip(';')
     return Para
 
 def DeleteNote(List):
@@ -94,7 +98,7 @@ def BuildChart(List):
     NodeNum = 0#每次新建Node要+1
     Floor = 0#每次进入不同层要加减
     ParaNode = ''
-    EndOfFor = ''
+    EndOfFor = ['' for i in range(100)]#当前层的for变量改变的信息
     Return = 0#当为1时表明读到了return，当前函数后面都无效
     NodeForFloor = []#每一层最后一个，关键性连接语句算作上一层,循环的判断存在这里，用于结束循环，continue回来,类似一个栈，栈顶是当前循环的开端
     NodeToEnd = []#return
@@ -126,7 +130,7 @@ def BuildChart(List):
             continue
 
         if String.find('}') != -1:
-            ParaNode = CLean(ParaNode, EndOfFor)
+            ParaNode = CLean(ParaNode, EndOfFor[Floor])
             if ParaNode != '':#建立中间正常块
                 CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
                 cnt = 0
@@ -140,12 +144,12 @@ def BuildChart(List):
                 NodeToNextMark[Floor].append('')
                 NodeNum += 1
                 ParaNode = ''
-                EndOfFor = ''
+                EndOfFor[Floor] = ''
 
             if NodeForFloor:#结束指向之前的块
                 cnt = 0
                 for NextNode in NodeToNext[Floor]:
-                    CreateEdge(NextNode, NodeForFloor[-1], NodeToNextMark[Floor][cnt], 'w', '')
+                    CreateEdge(NextNode, NodeForFloor[-1], NodeToNextMark[Floor][cnt], 'w', 'w')
                     cnt += 1
                 while NodeToNext[Floor]:
                     NodeToNextMark[Floor].pop()
@@ -175,7 +179,7 @@ def BuildChart(List):
 
         if re.match(r'\s*break\s*', String):#Break
             Return = 1
-            ParaNode = CLean(ParaNode, EndOfFor)
+            ParaNode = CLean(ParaNode, EndOfFor[Floor])
             if ParaNode != '':  # 把之前的连续普通先连上
                 CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
                 cnt = 0
@@ -189,14 +193,14 @@ def BuildChart(List):
                 NodeToNextMark[Floor-1].append('')
                 NodeNum += 1
                 ParaNode = ''
-                EndOfFor = ''
+                EndOfFor[Floor] = ''
 
             continue
 
         if re.match(r'\s*return[\s;]+', String):#寻找return
             Return = 1
             String = String.replace('return', '').replace(';', '').replace(' ', '')
-            ParaNode = CLean(ParaNode, EndOfFor)
+            ParaNode = CLean(ParaNode, EndOfFor[Floor])
             if ParaNode != '':#把之前的连续普通先连上
                 CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
                 cnt = 0
@@ -210,7 +214,7 @@ def BuildChart(List):
                 NodeToNextMark[Floor].append('')
                 NodeNum += 1
                 ParaNode = ''
-                EndOfFor = ''
+                EndOfFor[Floor] = ''
 
             #创建类似于输出的返回Node
             CreateNode(NodeName[NodeNum], 'Return ' + String, Shape[3])
@@ -231,8 +235,8 @@ def BuildChart(List):
             ParaNode += String[0:x+1]
             String = String[x+1:]
             x = String.find(';')
-            EndOfFor = String[x+1:]
-            String = String[0:x]
+            EndOfFor[Floor+1] = String[x+1:]
+            String = String[0:x] + '?'
 
             ParaNode = CLean(ParaNode, '')
             if ParaNode != '':#把之前的连续普通先连上
@@ -264,6 +268,43 @@ def BuildChart(List):
             NodeToNext[Floor].append(NodeName[NodeNum])
             NodeToNextMark[Floor].append('No')
             #层栈存入
+            NodeForFloor.append(NodeName[NodeNum])
+
+            NodeNum += 1
+            Floor += 1
+            continue
+
+        if re.match(r'\s*while()', String):  # while循环
+            String = String.replace('while', '').replace(' ', '').replace('(', '').replace(')', '') + '?'
+            ParaNode = CLean(ParaNode, '')
+            if ParaNode != '':  # 把之前的连续普通先连上
+                CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
+                cnt = 0
+                for NextNode in NodeToNext[Floor]:
+                    CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt], 'n', '')
+                    cnt += 1
+                while NodeToNext[Floor]:
+                    NodeToNextMark[Floor].pop()
+                    NodeToNext[Floor].pop()
+                NodeToNext[Floor].append(NodeName[NodeNum])
+                NodeToNextMark[Floor].append('')
+                NodeNum += 1
+                ParaNode = ''
+
+            CreateNode(NodeName[NodeNum], String, Shape[2])
+            cnt = 0
+            for NextNode in NodeToNext[Floor]:
+                CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt], 'n', '')
+                cnt += 1
+            while NodeToNext[Floor]:
+                NodeToNextMark[Floor].pop()
+                NodeToNext[Floor].pop()
+            # yes and no 分支建立
+            NodeToNext[Floor + 1].append(NodeName[NodeNum])
+            NodeToNextMark[Floor + 1].append('Yes')
+            NodeToNext[Floor].append(NodeName[NodeNum])
+            NodeToNextMark[Floor].append('No')
+            # 层栈存入
             NodeForFloor.append(NodeName[NodeNum])
 
             NodeNum += 1
