@@ -4,7 +4,8 @@ from graphviz import Digraph
 dot = Digraph(comment="The Chart")
 Shape = ['Mrecord', 'rectangle', 'diamond', 'parallelogram']#开始，正常，判断，输入输出
 NodeName = [str(x) for x in range(1, 100)]
-Key = ['int', 'char', 'long long', 'long', 'void', 'unsigned int', 'unsigned long long', 'unsigned long', 'float', 'double', 'long double']
+Key = ['int', 'char', 'long long', 'long', 'void', 'unsigned int', 'unsigned long long', 'unsigned long', 'float',
+       'double', 'long double']
 
 def CreateNode(Name, Label, Shape):
     dot.node(name=Name, label=Label, shape=Shape)
@@ -98,11 +99,15 @@ def BuildChart(List):
     NodeNum = 0#每次新建Node要+1
     Floor = 0#每次进入不同层要加减
     ParaNode = ''
-    FloorOfIf = [[] for i in range(100)]#Floor层If块
+    LastIf = []
+    FloorOfElse = [[] for i in range(100)]
+    FloorOfIf = [[] for i in range(100)]#Floor层If块,因为if不增加循环层的特殊性，需要标记特别处理
     EndOfFor = ['' for i in range(100)]#当前层的for变量改变的信息
     Return = 0#当为1时表明读到了return，当前函数后面都无效
-    NodeForFloor = []#每一层最后一个，关键性连接语句算作上一层,循环的判断存在这里，用于结束循环，continue回来,类似一个栈，栈顶是当前循环的开端
+    NodeForFloor = []#每一层最后一个，关键性连接语句算作上一层,循环的判断存在这里,类似一个栈，栈顶是当前循环的开端
     NodeToEnd = []#return
+    NodeSave = [[] for i in range(100)]#else暂存
+    NodeSaveMark = [[] for i in range(100)]#else暂存
     NodeToNext = [[] for i in range(100)]#所有的想要指向Floor层下一个的，意思是被指向的在Floor层，每次要清除
     NodeToNextMark = [[] for i in range(100)]#跟着NodeToNext一起变
     for String in List:
@@ -132,6 +137,31 @@ def BuildChart(List):
 
         if String.find('}') != -1:#}为分界
 
+            if FloorOfElse[Floor]:#else结束
+                ParaNode = CLean(ParaNode, '')
+                if ParaNode != '':  # 建立中间正常块
+                    CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
+                    cnt = 0
+                    for NextNode in NodeToNext[Floor]:
+                        CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt], 'n', '')
+                        cnt += 1
+                    while NodeToNext[Floor]:
+                        NodeToNextMark[Floor].pop()
+                        NodeToNext[Floor].pop()
+                    NodeToNext[Floor].append(NodeName[NodeNum])
+                    NodeToNextMark[Floor].append('')
+                    NodeNum += 1
+                    ParaNode = ''
+
+                cnt = 0
+                for NextNode in NodeSave[Floor]:#归还
+                    NodeToNext[Floor].append(NextNode)
+                    NodeToNextMark[Floor].append(NodeSaveMark[Floor][cnt])
+                    cnt += 1
+
+                FloorOfElse[Floor].pop()
+                continue
+
             if FloorOfIf[Floor]:#if的结束
                 ParaNode = CLean(ParaNode, '')
                 if ParaNode != '':  # 建立中间正常块
@@ -150,6 +180,7 @@ def BuildChart(List):
 
                 NodeToNext[Floor].append(FloorOfIf[Floor][-1])
                 NodeToNextMark[Floor].append('No')
+                LastIf.append(FloorOfIf[Floor][-1])
                 FloorOfIf[Floor].pop()
                 continue
 
@@ -384,6 +415,24 @@ def BuildChart(List):
 
             FloorOfIf[Floor].append(NodeName[NodeNum])
             NodeNum += 1
+            continue
+
+        if re.match(r'\s*else', String):#遇到else，需要防止上一个if中的东西连过来,NodeToNext备份
+            FloorOfElse[Floor].append(LastIf[-1])
+            cnt = 0
+            for NextNode in NodeToNext[Floor]:
+                if NextNode != LastIf[-1]:
+                    NodeSave[Floor].append(NextNode)
+                    NodeSaveMark[Floor].append(NodeToNextMark[Floor][cnt])
+                cnt += 1
+
+            while NodeToNext[Floor]:
+                NodeToNext[Floor].pop()
+                NodeToNextMark[Floor].pop()
+
+            NodeToNext[Floor].append(LastIf[-1])
+            NodeToNextMark[Floor].append('No')
+            LastIf.pop()
             continue
 
         ParaNode = ParaNode + String
