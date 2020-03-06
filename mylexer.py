@@ -197,7 +197,26 @@ def BuildChart(List):
 
             continue
 
-        if re.match(r'\s*return[\s;]+', String):#寻找return
+        if re.match(r'\s*continue\s*', String):  # Continue
+            Return = 1
+            ParaNode = CLean(ParaNode, EndOfFor[Floor])
+            if ParaNode != '':  # 把之前的连续普通先连上
+                CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
+                cnt = 0
+                for NextNode in NodeToNext[Floor]:
+                    CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt], 'n', '')
+                    cnt += 1
+                while NodeToNext[Floor]:
+                    NodeToNextMark[Floor].pop()
+                    NodeToNext[Floor].pop()
+                NodeToNext[Floor].append(NodeName[NodeNum])
+                NodeToNextMark[Floor].append('')
+                NodeNum += 1
+                ParaNode = ''
+
+            continue
+
+        if re.match(r'\s*return[\s;]+', String):#Return
             Return = 1
             String = String.replace('return', '').replace(';', '').replace(' ', '')
             ParaNode = CLean(ParaNode, EndOfFor[Floor])
@@ -252,7 +271,6 @@ def BuildChart(List):
                 NodeToNextMark[Floor].append('')
                 NodeNum += 1
                 ParaNode = ''
-
 
             CreateNode(NodeName[NodeNum], String, Shape[2])
             cnt = 0
