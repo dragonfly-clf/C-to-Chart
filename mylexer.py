@@ -439,6 +439,36 @@ def BuildChart(List):
             LastIf.pop()
             continue
 
+        if String.find('getchar()') != -1:#getchar
+            ParaNode = CLean(ParaNode, '')
+            if ParaNode != '':  # 把之前的连续普通先连上
+                CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
+                cnt = 0
+                for NextNode in NodeToNext[Floor]:
+                    CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt], 'n', '')
+                    cnt += 1
+                while NodeToNext[Floor]:
+                    NodeToNextMark[Floor].pop()
+                    NodeToNext[Floor].pop()
+                NodeToNext[Floor].append(NodeName[NodeNum])
+                NodeToNextMark[Floor].append('')
+                NodeNum += 1
+                ParaNode = ''
+
+            String = "Input " + String.replace('getchar()', '').replace(' ', '').replace('=', '').strip(';')
+            CreateNode(NodeName[NodeNum], String, Shape[3])
+            cnt = 0
+            for NextNode in NodeToNext[Floor]:
+                CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt], 'n', '')
+                cnt += 1
+            while NodeToNext[Floor]:
+                NodeToNext[Floor].pop()
+                NodeToNextMark[Floor].pop()
+            NodeToNext[Floor].append(NodeName[NodeNum])
+            NodeToNextMark[Floor].append('')
+            NodeNum += 1
+            continue
+
         ParaNode = ParaNode + String
 
 
