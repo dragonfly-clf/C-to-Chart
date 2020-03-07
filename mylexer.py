@@ -520,6 +520,21 @@ def BuildChart(List):
                 NodeNum += 1
                 ParaNode = ''
 
+            x = String.find('"')
+            String = String[x+1:]
+            x = String.find('"')
+            Str = String[x+2:]
+            String = String[:x]
+            vName = Str.split(',')
+            cnt = 0
+
+            while String.find('%') != -1:
+                x = String.find('%')
+                Leng = 1
+                if (String[x+1] == 'l'):
+                    Leng = 2
+                String = String[:x] + vName[cnt] + String[x+Leng+1:]
+                cnt += 1
 
             String = "Output " + String.replace(')', '').strip(';')
 
