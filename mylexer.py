@@ -469,6 +469,73 @@ def BuildChart(List):
             NodeNum += 1
             continue
 
+        if String.find('scanf') != -1:
+            ParaNode = CLean(ParaNode, '')
+            if ParaNode != '':  # 把之前的连续普通先连上
+                CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
+                cnt = 0
+                for NextNode in NodeToNext[Floor]:
+                    CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt], 'n', '')
+                    cnt += 1
+                while NodeToNext[Floor]:
+                    NodeToNextMark[Floor].pop()
+                    NodeToNext[Floor].pop()
+                NodeToNext[Floor].append(NodeName[NodeNum])
+                NodeToNextMark[Floor].append('')
+                NodeNum += 1
+                ParaNode = ''
+
+            x = String.find('"')
+            String = String[x+1:]
+            x = String.find('"')
+            String = String[x+2:]
+            String = "Input " + String.replace('&', '').replace(')', '').strip(';')
+
+            CreateNode(NodeName[NodeNum], String, Shape[3])
+            cnt = 0
+            for NextNode in NodeToNext[Floor]:
+                CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt], 'n', '')
+                cnt += 1
+            while NodeToNext[Floor]:
+                NodeToNext[Floor].pop()
+                NodeToNextMark[Floor].pop()
+            NodeToNext[Floor].append(NodeName[NodeNum])
+            NodeToNextMark[Floor].append('')
+            NodeNum += 1
+            continue
+
+        if String.find('printf') != -1:
+            ParaNode = CLean(ParaNode, '')
+            if ParaNode != '':  # 把之前的连续普通先连上
+                CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
+                cnt = 0
+                for NextNode in NodeToNext[Floor]:
+                    CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt], 'n', '')
+                    cnt += 1
+                while NodeToNext[Floor]:
+                    NodeToNextMark[Floor].pop()
+                    NodeToNext[Floor].pop()
+                NodeToNext[Floor].append(NodeName[NodeNum])
+                NodeToNextMark[Floor].append('')
+                NodeNum += 1
+                ParaNode = ''
+
+
+            String = "Output " + String.replace(')', '').strip(';')
+
+            CreateNode(NodeName[NodeNum], String, Shape[3])
+            cnt = 0
+            for NextNode in NodeToNext[Floor]:
+                CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt], 'n', '')
+                cnt += 1
+            while NodeToNext[Floor]:
+                NodeToNext[Floor].pop()
+                NodeToNextMark[Floor].pop()
+            NodeToNext[Floor].append(NodeName[NodeNum])
+            NodeToNextMark[Floor].append('')
+            NodeNum += 1
+            continue
+
         ParaNode = ParaNode + String
 
 
