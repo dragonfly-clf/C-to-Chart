@@ -103,7 +103,6 @@ def BuildChart(List):
     FloorOfElse = [[] for i in range(100)]
     FloorOfIf = [[] for i in range(100)]#Floor层If块,因为if不增加循环层的特殊性，需要标记特别处理
     EndOfFor = ['' for i in range(100)]#当前层的for变量改变的信息
-    Return = 0#当为1时表明读到了return，当前函数后面都无效
     NodeForFloor = []#每一层最后一个，关键性连接语句算作上一层,循环的判断存在这里,类似一个栈，栈顶是当前循环的开端
     NodeToEnd = []#return
     NodeSave = [[] for i in range(100)]#else暂存
@@ -113,9 +112,6 @@ def BuildChart(List):
     for String in List:
         IsFunc = 0
         if String.find(r'#include') != -1:
-            continue
-
-        if Return and String.find('}') == -1:#return 语句之后的当前层的后续都没有用
             continue
 
         for key in Key:#判断是不是函数
@@ -214,8 +210,6 @@ def BuildChart(List):
                     NodeToNext[Floor].pop()
                 NodeForFloor.pop()
 
-            Return = 0
-
             if Floor == 1:#函数结束
                 CreateNode(NodeName[NodeNum], 'End', Shape[0])
                 cnt = 0
@@ -237,28 +231,7 @@ def BuildChart(List):
             continue
 
         if re.match(r'\s*break\s*', String):#Break
-            Return = 1
-            ParaNode = CLean(ParaNode, EndOfFor[Floor])
-            if ParaNode != '':  # 把之前的连续普通先连上
-                CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
-                cnt = 0
-                for NextNode in NodeToNext[Floor]:
-                    CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt], 'n', '')
-                    cnt += 1
-                while NodeToNext[Floor]:
-                    NodeToNextMark[Floor].pop()
-                    NodeToNext[Floor].pop()
-                NodeToNext[Floor-1].append(NodeName[NodeNum])
-                NodeToNextMark[Floor-1].append('')
-                NodeNum += 1
-                ParaNode = ''
-                EndOfFor[Floor] = ''
-
-            continue
-
-        if re.match(r'\s*continue\s*', String):  # Continue
-            Return = 1
-            ParaNode = CLean(ParaNode, EndOfFor[Floor])
+            ParaNode = CLean(ParaNode, '')
             if ParaNode != '':  # 把之前的连续普通先连上
                 CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
                 cnt = 0
@@ -273,12 +246,37 @@ def BuildChart(List):
                 NodeNum += 1
                 ParaNode = ''
 
+            cnt = 0
+            for NextNode in NodeToNext[Floor]:
+                NodeToNext[Floor-1].append(NextNode)
+                NodeToNextMark[Floor-1].append(NodeToNextMark[Floor][cnt])
+                cnt += 1
+            while NodeToNext[Floor]:
+                NodeToNext[Floor].pop()
+                NodeToNextMark[Floor].pop()
+
+            continue
+
+        if re.match(r'\s*continue\s*', String):  # Continue
+            ParaNode = CLean(ParaNode, EndOfFor[Floor])
+            if ParaNode != '':  # 把之前的连续普通先连上
+                CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
+                cnt = 0
+                for NextNode in NodeToNext[Floor]:
+                    CreateEdge(NextNode, NodeName[NodeNum], NodeToNextMark[Floor][cnt], 'n', '')
+                    cnt += 1
+                while NodeToNext[Floor]:
+                    NodeToNextMark[Floor].pop()
+                    NodeToNext[Floor].pop()
+                CreateEdge(NodeName[NodeNum], NodeForFloor[-1], '', 'w', 'w')
+                NodeNum += 1
+                ParaNode = ''
+
             continue
 
         if re.match(r'\s*return[\s;]+', String):#Return
-            Return = 1
             String = String.replace('return', '').replace(';', '').replace(' ', '')
-            ParaNode = CLean(ParaNode, EndOfFor[Floor])
+            ParaNode = CLean(ParaNode, '')
             if ParaNode != '':#把之前的连续普通先连上
                 CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
                 cnt = 0
