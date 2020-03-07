@@ -159,6 +159,10 @@ def BuildChart(List):
                     NodeToNextMark[Floor].append(NodeSaveMark[Floor][cnt])
                     cnt += 1
 
+                while NodeSave[Floor]:
+                    NodeSave[Floor].pop()
+                    NodeSaveMark[Floor].pop()
+
                 FloorOfElse[Floor].pop()
                 continue
 
