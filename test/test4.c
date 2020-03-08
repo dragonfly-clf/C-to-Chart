@@ -1,31 +1,21 @@
 #include<stdio.h>
-long long f(int a)
-{
-	a=a+a;
-	return a;
-}
 int main()
 {
-	for (i=1;i<=n;i++)
-	{
-		if (ans>1)
-		{
-			haha;	
+	for (i=1;i<=n;i++){
+		if (ans>1){
+			sum++;	
 		}
-		else
-		{
-		    f(yes);
+		else{
+		    num=sum+ans;
 		    continue;
 		}
-		j++;
+		q++;
 	} 
-	while (j<=m)
-	{
+	while (j<=m){
 		if (ok)
 	    {
 	    	break;
 	    }
 		j++;
 	}
-	yyyy
 }

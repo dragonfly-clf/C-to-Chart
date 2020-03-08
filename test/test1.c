@@ -1,18 +1,15 @@
 #include<stdio.h>
 double f(int a,int b)
 {
-	s=a+b;
+	int s=a+b;
 	return s;
 }
-/*void Z()
-{
-	a=b;
-}*/
 int main()
 {
-	int i=1254;
-	if (i<=n)
+	int i=0;
+	if (i<=10)
 	{ 
+	    int m=5; 
 	    for (i=1;i<=m;i++) 
 	    {
 		    b++;
@@ -21,10 +18,10 @@ int main()
 	}
 	else
 	{
-		while(i++<=100)
+		while(i<=100)
 		{
 			s=nb;
-			go++;
+			i++;
 		}
 		ok!;
 	}

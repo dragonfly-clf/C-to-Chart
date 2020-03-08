@@ -306,7 +306,7 @@ def BuildChart(List):
             continue
 
         if re.match(r'\s*for()', String):#for循环
-            String = String.replace('for', '').replace(' ', '').replace('(', '').replace(')', '')
+            String = String.replace('for', '').replace(' ', '').replace('(', '').replace(')', '').replace('{', '')
             x = String.find(';')
             ParaNode += String[0:x+1]
             String = String[x+1:]
@@ -350,7 +350,7 @@ def BuildChart(List):
             continue
 
         if re.match(r'\s*while()', String):  # while循环
-            String = String.replace('while', '').replace(' ', '').replace('(', '').replace(')', '') + '?'
+            String = String.replace('while', '').replace(' ', '').replace('(', '').replace(')', '').replace('{', '') + '?'
             ParaNode = CLean(ParaNode, '')
             if ParaNode != '':  # 把之前的连续普通先连上
                 CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
@@ -387,7 +387,7 @@ def BuildChart(List):
             continue
 
         if re.match(r'\s*if()', String):#if,Floor不增加
-            String = String.replace('if', '').replace(' ', '').replace('(', '').replace(')', '') + '?'
+            String = String.replace('if', '').replace(' ', '').replace('(', '').replace(')', '').replace('{', '') + '?'
             ParaNode = CLean(ParaNode, '')
             if ParaNode != '':  # 把之前的连续普通先连上
                 CreateNode(NodeName[NodeNum], ParaNode, Shape[1])
@@ -561,10 +561,7 @@ if __name__ == '__main__':#默认所有的分层都有{}，所有}都是单独�
         line = line.strip(' ')
         line = line.strip('\t')
         Result.append(line)
-    print(Result)
     Result = Hong(Result)
-    print(Result)
     Result = DeleteNote(Result)
-    print(Result)
     BuildChart(Result)
     dot.view()
